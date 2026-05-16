@@ -1,0 +1,19 @@
+{
+  "name": "Mise en Place",
+  "short_name": "Cozinha",
+  "description": "Sistema de estoque para cozinha profissional",
+  "start_url": "/Mise-en-place/mise-en-place-mobile.html",
+  "scope": "/Mise-en-place/",
+  "display": "standalone",
+  "background_color": "#0a0f0a",
+  "theme_color": "#0a0f0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
