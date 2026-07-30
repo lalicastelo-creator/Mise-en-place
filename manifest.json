@@ -1,9 +1,9 @@
 {
   "name": "Mise en Place",
-  "short_name": "Cozinha",
-  "description": "Sistema de estoque para cozinha profissional",
-  "start_url": "/Mise-en-place/mise-en-place-mobile.html",
-  "scope": "/Mise-en-place/",
+  "short_name": "Mise en Place",
+  "description": "Estoque da cozinha — Caseh",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0a0f0a",
   "theme_color": "#0a0f0a",
