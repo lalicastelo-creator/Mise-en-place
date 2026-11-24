@@ -10,7 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="Mise en Place">
 <title>Mise en Place</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -191,6 +192,23 @@ select.finput{cursor:pointer}
 .empty .ei{font-size:44px;margin-bottom:12px}
 .empty .et{font-size:18px;font-weight:700;color:var(--text2);margin-bottom:6px}
 .empty .es{font-size:13px;line-height:1.6}
+.quick-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.quick-btn{background:var(--s2);border:1px solid var(--gdim);color:var(--green2);border-radius:var(--radius);padding:12px 10px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.quick-btn:active{background:var(--s3)}
+.item-name.tap{cursor:pointer}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:6px;cursor:pointer}
+.hrow-nome{font-size:14px;font-weight:700;color:var(--cream)}
+.hrow-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);margin-top:2px}
+.hrow-qty{font-family:'JetBrains Mono',monospace;font-size:15px;color:var(--text);white-space:nowrap;text-align:right}
+.hrow-qty.velho{color:var(--text3)}
+.delta{font-size:10px;display:block;margin-top:2px}
+.delta.up{color:var(--green)}
+.delta.down{color:var(--red)}
+.ih-row{display:grid;grid-template-columns:110px 1fr 70px;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--border);font-size:13px}
+.ih-bar{height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.ih-bar>div{height:100%;background:var(--green);border-radius:5px}
+.ih-bar>div.low{background:var(--red)}
+.ih-qty{font-family:'JetBrains Mono',monospace;text-align:right}
 .big-btn{width:100%;background:var(--s2);border:1px dashed var(--border2);color:var(--text2);border-radius:var(--radius);padding:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
 </style>
 </head>
@@ -224,6 +242,10 @@ select.finput{cursor:pointer}
     <div class="stats-row">
       <div class="stat-box"><div class="stat-num danger" id="s-low">0</div><div class="stat-lbl">Comprar</div></div>
       <div class="stat-box"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">Total itens</div></div>
+    </div>
+    <div class="quick-row">
+      <button class="quick-btn" onclick="openContagemSheet()">📱 Enviar contagem</button>
+      <button class="quick-btn" onclick="openSemanas()">📊 Histórico semanal</button>
     </div>
     <div class="search-wrap"><input type="search" id="search-inp" placeholder="Buscar item..." oninput="renderEstoque()" autocomplete="off"></div>
     <div class="filter-scroll" id="filter-scroll"></div>
@@ -439,6 +461,50 @@ select.finput{cursor:pointer}
 </div>
 </div>
 
+<!-- SHEET: ENVIAR CONTAGEM (o que temos hoje) -->
+<div class="overlay" id="sheet-contagem">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">O que temos hoje</div>
+  <div class="filter-scroll" id="cont-scope"></div>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);margin-bottom:12px;cursor:pointer">
+    <input type="checkbox" id="cont-sem-zero" onchange="renderContagemSheet()"> Esconder itens zerados
+  </label>
+  <div class="wa-box" id="cont-box"></div>
+  <button class="copy-btn" onclick="copyContagem()">📱 Copiar para WhatsApp</button>
+  <div class="sheet-footer">
+    <button class="btn-sheet-cancel" style="flex:1" onclick="closeSheet('sheet-contagem')">Fechar</button>
+  </div>
+</div>
+</div>
+
+<!-- SHEET: HISTÓRICO SEMANAL -->
+<div class="overlay" id="sheet-semanas">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Histórico semanal</div>
+  <div class="filter-scroll" id="sem-chips"></div>
+  <div class="search-wrap"><input type="search" id="sem-search" placeholder="Buscar item..." oninput="renderSemanas()" autocomplete="off"></div>
+  <div id="sem-body"></div>
+  <div class="sheet-footer">
+    <button class="btn-sheet-cancel" onclick="closeSheet('sheet-semanas')">Fechar</button>
+    <button class="btn-sheet-ok" id="sem-copy" onclick="copySemana()">📱 Copiar esta semana</button>
+  </div>
+</div>
+</div>
+
+<!-- SHEET: HISTÓRICO DE UM ITEM -->
+<div class="overlay" id="sheet-item-hist">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="ih-title">Histórico</div>
+  <div id="ih-body"></div>
+  <div class="sheet-footer">
+    <button class="btn-sheet-cancel" style="flex:1" onclick="closeSheet('sheet-item-hist')">Fechar</button>
+  </div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -459,8 +525,8 @@ const CATS_PADRAO = [
 ];
 
 // ════════════ ESTADO LOCAL (cache) ════════════
-function emptyState(){return {cats:[],items:[],extras:[],hist:[],receitas:[]}}
-function loadCache(){try{const s=JSON.parse(localStorage.getItem('mep4')||'null');if(s&&s.items)return s}catch{}return null}
+function emptyState(){return {cats:[],items:[],extras:[],hist:[],receitas:[],contagens:[]}}
+function loadCache(){try{const s=JSON.parse(localStorage.getItem('mep4')||'null');if(s&&s.items){s.contagens=s.contagens||[];return s}}catch{}return null}
 let S = loadCache() || emptyState();
 function saveCache(){localStorage.setItem('mep4',JSON.stringify(S))}
 
@@ -557,7 +623,8 @@ async function flushOutbox(){
           method:'DELETE',headers:sbHeaders()
         });
       }
-      if(!r.ok)throw new Error('HTTP '+r.status);
+      // tabela de contagens ainda não criada no banco: descarta essa foto em vez de travar a fila inteira
+      if(!r.ok&&!(op.table==='mep_contagens'&&r.status===404))throw new Error('HTTP '+r.status);
       OUTBOX.shift();saveOutbox();
     }
     setDot('on');updPendingSub();
@@ -608,10 +675,13 @@ async function pullAll(silent){
       get('mep_historico?select=*&order=data.desc&limit=30'),
       get('mep_receitas?select=*&order=nome'),
     ]);
-    S={cats,items,extras,hist,receitas};
+    // histórico semanal: se a tabela não existir ainda, mantém o que está no aparelho
+    const contagens=await get('mep_contagens?select=*&order=id.desc&limit=52').catch(()=>S.contagens||[]);
+    S={cats,items,extras,hist,receitas,contagens};
     // primeira vez com banco vazio → cria categorias padrão e migra dados antigos
     if(!cats.length&&!items.length){await seedOuMigra()}
     saveCache();rerenderAll();
+    confereSnapshot();
     setDot('on');updPendingSub();
     if(!silent)toast('Atualizado da nuvem ☁️');
     pulling=false;return true;
@@ -658,6 +728,7 @@ function pushEstadoInteiro(novo){
   novo.extras.forEach(x=>enqueueSilent({table:'mep_extras',op:'upsert',row:x}));
   novo.hist.forEach(h=>enqueueSilent({table:'mep_historico',op:'upsert',row:h}));
   novo.receitas.forEach(r=>enqueueSilent({table:'mep_receitas',op:'upsert',row:r}));
+  (novo.contagens||[]).forEach(c=>enqueueSilent({table:'mep_contagens',op:'upsert',row:c}));
   saveOutbox();
 }
 function enqueueSilent(op){OUTBOX.push(op)}
@@ -684,6 +755,33 @@ function salvaCat(row){upsertLocal(S.cats,row);saveCache();enqueue({table:'mep_c
 function salvaExtra(row){upsertLocal(S.extras,row);saveCache();enqueue({table:'mep_extras',op:'upsert',row})}
 function salvaHist(row){S.hist.unshift(row);S.hist=S.hist.slice(0,30);saveCache();enqueue({table:'mep_historico',op:'upsert',row})}
 function salvaRec(row){upsertLocal(S.receitas,row);saveCache();enqueue({table:'mep_receitas',op:'upsert',row})}
+
+// ════════════ FOTO SEMANAL DO ESTOQUE ════════════
+// Uma foto por semana (id = segunda-feira). Cada contagem atualiza a foto da semana atual,
+// então no fim da semana ela guarda "o que tinha" naquela semana.
+function isoLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function semanaDe(d){const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return isoLocal(x)}
+const dataSemana=id=>new Date(id+'T00:00:00');
+let snapTimer=null;
+function agendaSnapshot(){clearTimeout(snapTimer);snapTimer=setTimeout(salvaSnapshot,3000)}
+function salvaSnapshot(){
+  clearTimeout(snapTimer);snapTimer=null;
+  if(!S.items.length)return;
+  const row={id:semanaDe(new Date()),atualizado_em:new Date().toISOString(),
+    itens:S.items.map(i=>({id:i.id,nome:i.nome,categoria:i.categoria,unidade:i.unidade,
+      atual:+i.atual||0,minimo:+i.minimo||0,contado_em:i.contado_em||null}))};
+  upsertLocal(S.contagens,row);
+  S.contagens.sort((a,b)=>b.id.localeCompare(a.id));
+  saveCache();enqueue({table:'mep_contagens',op:'upsert',row});
+}
+// depois de baixar da nuvem: cria a foto da semana se não existe, ou atualiza se alguém contou depois dela
+function confereSnapshot(){
+  if(!S.items.length)return;
+  const snap=S.contagens.find(c=>c.id===semanaDe(new Date()));
+  const tSnap=snap?new Date(snap.atualizado_em).getTime():0;
+  if(!snap||S.items.some(i=>i.contado_em&&new Date(i.contado_em).getTime()>tSnap))agendaSnapshot();
+}
+
 function apaga(table,arrName,id){
   S[arrName]=S[arrName].filter(x=>x.id!==id);saveCache();
   enqueue({table,op:'delete',id});
@@ -785,7 +883,7 @@ function itemRowHtml(item){
   return `<div class="item-row ${lw?'low':'ok'}" id="ir-${item.id}">
     <div class="item-row-top">
       <div>
-        <div class="item-name">${esc(item.nome)}</div>
+        <div class="item-name tap" onclick="openItemHist('${item.id}')" title="Ver histórico">${esc(item.nome)}</div>
         <div class="item-meta">mín ${nf(item.minimo)} ${esc(item.unidade)}${(+item.embalagem>1)?` · pacote ${nf(item.embalagem)} ${esc(item.unidade)}`:''}${contado}</div>
       </div>
       <div class="item-actions">
@@ -816,7 +914,7 @@ function updAtu(id,val){
   const it=S.items.find(i=>i.id===id);if(!it)return;
   it.atual=parseFloat(val)||0;
   it.contado_em=new Date().toISOString();
-  salvaItem({...it});
+  salvaItem({...it});agendaSnapshot();
   const compra=calcCompra(it),lw=compra>0;
   const st=document.getElementById('st-'+id);
   if(st)st.className='stepper '+(lw?'low':'ok');
@@ -899,6 +997,7 @@ function saveItem(){
     contado_em:base?base.contado_em:null
   };
   salvaItem(row);
+  if(!base||+base.atual!==row.atual)agendaSnapshot();
   toast(editItemId?'Atualizado ✓':'Adicionado ✓');
   closeSheet('sheet-item');renderEstoque();
 }
@@ -981,6 +1080,7 @@ function renderRapido(){
       <div style="font-size:15px;color:var(--text2);margin-bottom:28px">${nLow} ${nLow===1?'item precisa':'itens precisam'} de compra</div>
       <div class="rapid-btns">
         <button class="rapid-next" onclick="goLista()">Ver lista de compras →</button>
+        <button class="rapid-skip" onclick="openContagemSheet(rapidScope)">📱 Enviar contagem</button>
         <button class="rapid-skip" onclick="renderRapidoPicker()">Contar outra área</button>
         <button class="rapid-back" onclick="showPage('estoque')">Voltar ao estoque</button>
       </div>
@@ -1020,7 +1120,7 @@ function rapidNext(){
   const val=parseFloat(document.getElementById('rapid-inp')?.value)||0;
   const it=rapidItems[rapidIdx];
   const orig=S.items.find(i=>i.id===it.id);
-  if(orig){orig.atual=val;it.atual=val;orig.contado_em=new Date().toISOString();salvaItem({...orig})}
+  if(orig){orig.atual=val;it.atual=val;orig.contado_em=new Date().toISOString();salvaItem({...orig});agendaSnapshot()}
   rapidIdx++;renderRapido();
 }
 function rapidSkip(){rapidIdx++;renderRapido()}
@@ -1165,6 +1265,149 @@ function clearHist(){
   const ids=S.hist.map(h=>h.id);
   ids.forEach(id=>apaga('mep_historico','hist',id));
   toast('Histórico apagado ✓');
+}
+
+// ════════════ ENVIAR CONTAGEM ("o que temos hoje") ════════════
+function copiar(txt,msg){
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>toast(msg)).catch(()=>fallbackCopy(txt));
+  else fallbackCopy(txt);
+}
+const fmtDM=d=>new Date(d).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+// itens: [{nome,categoria,unidade,atual,contado_em}] · nota(i): observação opcional do item
+function textoContagem(itens,titulo,nota){
+  const grouped={};
+  itens.forEach(i=>{(grouped[i.categoria]=grouped[i.categoria]||[]).push(i)});
+  let t=`*${titulo}*\n\n`;
+  for(const catId of Object.keys(grouped).sort((a,b)=>catOrder(a)-catOrder(b))){
+    const c=catById(catId);
+    t+=`${c.icone} *${c.nome.toUpperCase()}*\n`;
+    grouped[catId].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(i=>{
+      t+=`• ${i.nome}: ${nf(+i.atual||0)} ${i.unidade}`;
+      const n=nota&&nota(i);if(n)t+=` _(${n})_`;
+      t+='\n';
+    });
+    t+='\n';
+  }
+  return t.trimEnd();
+}
+const waHtml=txt=>esc(txt).replace(/\n/g,'<br>').replace(/\*(.*?)\*/g,'<strong>$1</strong>').replace(/_(.*?)_/g,'<em>$1</em>');
+
+let contScope='all';
+function openContagemSheet(scope){
+  if(!S.items.length){toast('Cadastre itens primeiro');return}
+  contScope=scope&&scope!=='all'&&S.cats.find(c=>c.id===scope)?scope
+    :(scope===undefined&&S.cats.find(c=>c.id===curFilter))?curFilter:'all';
+  renderContagemSheet();openSheet('sheet-contagem');
+}
+function setContScope(s){contScope=s;renderContagemSheet()}
+function itensContagem(){
+  const semZero=document.getElementById('cont-sem-zero').checked;
+  return S.items.filter(i=>(contScope==='all'||i.categoria===contScope)&&(!semZero||(+i.atual>0)));
+}
+function tituloContagem(){
+  const c=contScope==='all'?null:catById(contScope);
+  return `O QUE TEMOS HOJE${c?' — '+c.nome.toUpperCase():''} — ${fmtD(new Date())}`;
+}
+function notaHoje(i){
+  if(!i.contado_em)return 'não contado';
+  return isoLocal(new Date(i.contado_em))===isoLocal(new Date())?'':'contado '+fmtDM(i.contado_em);
+}
+function renderContagemSheet(){
+  const catsComItens=S.cats.filter(c=>S.items.some(i=>i.categoria===c.id));
+  document.getElementById('cont-scope').innerHTML=
+    `<button class="fchip ${contScope==='all'?'active':''}" onclick="setContScope('all')">Tudo</button>`+
+    catsComItens.map(c=>`<button class="fchip ${contScope===c.id?'active':''}" onclick="setContScope('${esc(c.id)}')">${c.icone} ${esc(c.nome)}</button>`).join('');
+  const itens=itensContagem();
+  document.getElementById('cont-box').innerHTML=itens.length
+    ?waHtml(textoContagem(itens,tituloContagem(),notaHoje))
+    :'Nenhum item nessa seleção.';
+}
+function copyContagem(){
+  const itens=itensContagem();
+  if(!itens.length){toast('Nenhum item nessa seleção');return}
+  copiar(textoContagem(itens,tituloContagem(),notaHoje),'Contagem copiada! Cole no WhatsApp ✓');
+}
+
+// ════════════ HISTÓRICO SEMANAL ════════════
+let semSel=null;
+function rotSemana(id){
+  const hoje=new Date();
+  if(id===semanaDe(hoje))return 'Esta semana';
+  if(id===semanaDe(new Date(hoje.getTime()-7*864e5)))return 'Semana passada';
+  return 'Sem. '+fmtDM(dataSemana(id));
+}
+function notaSemana(snapId){
+  const ini=dataSemana(snapId).getTime();
+  return i=>!i.contado_em?'não contado':new Date(i.contado_em).getTime()<ini?'últ. contagem '+fmtDM(i.contado_em):'';
+}
+function openSemanas(){
+  if(snapTimer||(!S.contagens.length&&S.items.length))salvaSnapshot();
+  if(!S.contagens.length){toast('Cadastre e conte itens pra começar o histórico');return}
+  if(!semSel||!S.contagens.find(c=>c.id===semSel))semSel=S.contagens[0].id;
+  document.getElementById('sem-search').value='';
+  renderSemanas();openSheet('sheet-semanas');
+}
+function setSemana(id){semSel=id;renderSemanas()}
+function renderSemanas(){
+  const lista=[...S.contagens].sort((a,b)=>b.id.localeCompare(a.id));
+  document.getElementById('sem-chips').innerHTML=lista.map(c=>
+    `<button class="fchip ${semSel===c.id?'active':''}" onclick="setSemana('${c.id}')">${rotSemana(c.id)}</button>`).join('');
+  const idx=lista.findIndex(c=>c.id===semSel);
+  const snap=lista[idx],ant=lista[idx+1];
+  const el=document.getElementById('sem-body');
+  if(!snap){el.innerHTML='';return}
+  const q=(document.getElementById('sem-search').value||'').toLowerCase();
+  const nota=notaSemana(snap.id);
+  const itens=(snap.itens||[]).filter(i=>!q||i.nome.toLowerCase().includes(q))
+    .sort((a,b)=>catOrder(a.categoria)-catOrder(b.categoria)||a.nome.localeCompare(b.nome,'pt-BR'));
+  let html=`<div class="hint" style="margin:-4px 0 10px">Semana de ${fmtD(dataSemana(snap.id))} · atualizado ${fmtD(snap.atualizado_em)}${ant?` · comparando com ${rotSemana(ant.id).toLowerCase()}`:''}</div>`;
+  if(!itens.length)html+=`<div class="empty" style="padding:24px"><div class="es">Nenhum item encontrado.</div></div>`;
+  let lastCat=null;
+  itens.forEach(i=>{
+    if(i.categoria!==lastCat){lastCat=i.categoria;html+=`<div class="cat-group-head">${pill(i.categoria)}</div>`}
+    const n=nota(i);
+    const p=ant&&(ant.itens||[]).find(x=>x.id===i.id);
+    let delta='';
+    if(p){const d=Math.round(((+i.atual||0)-(+p.atual||0))*100)/100;
+      if(d)delta=`<span class="delta ${d>0?'up':'down'}">${d>0?'▲ +':'▼ '}${nf(d)}</span>`}
+    html+=`<div class="hrow" onclick="openItemHist('${i.id}')">
+      <div><div class="hrow-nome">${esc(i.nome)}</div>${n?`<div class="hrow-sub">${esc(n)}</div>`:''}</div>
+      <div class="hrow-qty ${n?'velho':''}">${nf(+i.atual||0)} ${esc(i.unidade)}${delta}</div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+function copySemana(){
+  const snap=S.contagens.find(c=>c.id===semSel);if(!snap)return;
+  copiar(textoContagem(snap.itens||[],`ESTOQUE — SEMANA DE ${fmtD(dataSemana(snap.id))}`,notaSemana(snap.id)),'Contagem da semana copiada ✓');
+}
+
+// ── histórico de um item (ex: quanto chocolate tinha semana passada) ──
+function openItemHist(id){
+  const vivo=S.items.find(i=>i.id===id);
+  const semanas=[...S.contagens].sort((a,b)=>b.id.localeCompare(a.id));
+  const ref=vivo||semanas.map(s=>(s.itens||[]).find(x=>x.id===id)).find(Boolean);
+  if(!ref)return;
+  const atual=semanaDe(new Date());
+  const linhas=[];
+  if(vivo)linhas.push({rot:'Agora',qtd:+vivo.atual||0,min:+vivo.minimo||0,sub:vivo.contado_em?'contado '+fmtDM(vivo.contado_em):'não contado',velho:false});
+  semanas.forEach(s=>{
+    if(vivo&&s.id===atual)return; // "Agora" já mostra a semana atual
+    const x=(s.itens||[]).find(i=>i.id===id);if(!x)return;
+    const n=notaSemana(s.id)(x);
+    linhas.push({rot:rotSemana(s.id),qtd:+x.atual||0,min:+x.minimo||0,sub:n||('contado '+fmtDM(x.contado_em)),velho:!!n});
+  });
+  const max=Math.max(1,...linhas.map(l=>Math.max(l.qtd,l.min)));
+  document.getElementById('ih-title').textContent=ref.nome;
+  document.getElementById('ih-body').innerHTML=
+    `<div class="hint" style="margin:-8px 0 10px">${pill(ref.categoria)} · mínimo ${nf(+ref.minimo||0)} ${esc(ref.unidade)}</div>`+
+    (linhas.length<2?`<div class="hint" style="margin-bottom:10px">O histórico vai se formando semana a semana conforme você conta.</div>`:'')+
+    linhas.map(l=>`<div class="ih-row" style="${l.velho?'opacity:.5':''}">
+      <div><div style="font-weight:700">${l.rot}</div><div class="hrow-sub">${esc(l.sub)}</div></div>
+      <div class="ih-bar"><div class="${l.qtd<l.min?'low':''}" style="width:${Math.round(l.qtd/max*100)}%"></div></div>
+      <div class="ih-qty">${nf(l.qtd)} ${esc(ref.unidade)}</div>
+    </div>`).join('');
+  openSheet('sheet-item-hist');
 }
 
 // ════════════ RECEITAS ════════════
@@ -1355,11 +1598,13 @@ function importData(e){
       const data=JSON.parse(ev.target.result);
       let novo;
       if(data.v===4&&data.items&&data.cats){
-        novo={cats:data.cats,items:data.items,extras:data.extras||[],hist:data.hist||[],receitas:data.receitas||[]};
+        novo={cats:data.cats,items:data.items,extras:data.extras||[],hist:data.hist||[],receitas:data.receitas||[],contagens:data.contagens||[]};
       }else if(data.items&&data.cats){
         novo=converteAntigo(data); // backup do app antigo
         if(!novo.cats.length)novo.cats=[...CATS_PADRAO];
       }else throw 0;
+      // histórico semanal: junta o do backup com o que já existe (não apaga semanas)
+      (S.contagens||[]).forEach(c=>{if(!novo.contagens.find(x=>x.id===c.id))novo.contagens.push(c)});
       if(!confirm(`Importar ${novo.items.length} itens e ${novo.cats.length} categorias? Isso substitui os dados atuais (aqui e na nuvem).`))return;
       // apaga o que existe hoje e sobe o backup
       S.items.forEach(i=>enqueueSilent({table:'mep_itens',op:'delete',id:i.id}));
@@ -1380,7 +1625,11 @@ function importData(e){
 document.querySelectorAll('.overlay').forEach(o=>{
   o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')});
 });
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){flushOutbox().then(()=>pullAll(true))}});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(snapTimer)salvaSnapshot()} // saiu do app: grava a foto da semana na hora
+  else flushOutbox().then(()=>pullAll(true));
+});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 window.addEventListener('online',async()=>{
   if(!TOKEN&&!(await lerSessao())){mostrarLogin();return}
   flushOutbox().then(()=>pullAll(true));
